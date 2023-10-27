@@ -10,7 +10,7 @@ import {
     f_o_canvas_nonmanipulated__from_o_file__fits, 
     f_o_canvas_autostretched__from_o_file__fits, 
     f_a_n_u8__from_s_url
-} from "https://deno.land/x/o_file__fits@0.2/mod.js";
+} from "https://deno.land/x/o_file__fits@0.4/mod.js";
 
 
 let o_js__everything = null;
