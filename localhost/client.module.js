@@ -1,4 +1,4 @@
-import {f_o_html_from_o_js} from "https://deno.land/x/f_o_html_from_o_js@1.3/mod.js";
+import {f_o_html_from_o_js} from "https://deno.land/x/f_o_html_from_o_js@1.4/mod.js";
 
 import {
     f_add_css,
@@ -86,7 +86,11 @@ window.o_state = {
     o_canvas: null,
     o_canvas__fits: null,
     o_canvas__fits_autostretched: null,
+    o_state_o_js_roi: {
+        s_hey: 'hey', 
+        s_title: 'ROI - Region of Interest', 
 
+    }
 };
 let f_update_o_notification_and_render = function(
     s_class,
@@ -138,6 +142,143 @@ let f_resize_canvas = function(){
 window.onresize = function(){
     f_resize_canvas()
 }
+let o_o_state_o_js_s_css_roi = null;
+window.Victor = Victor
+let f_o_o_state_o_js_s_css = function(
+    o_state, 
+    o_js__content, 
+){
+    let o_js = null;
+    Object.assign(
+        o_state, 
+        {
+            o_trn: Victor(0,0),
+            o_scl: Victor(400, 400),
+            b_display_content: true,
+            b_mousedown_resizer: false, 
+            b_mousedown_top_bar: false, 
+            o_trn_mousedown_top_bar: Victor(),
+            o_trn_mousedown_resizer: Victor(),
+            o_trn_mouse_mousemove_last: Victor()
+        }
+    );
+    let n_ts = new Date().getTime();
+    let s_id = `id_${n_ts}_${parseInt(Math.random())}`
+    
+    o_js = {
+            f_o_js: function(){
+                let f_s_style = function(){
+                    return `cursor:move;position:fixed;top:${o_state.o_trn.y}px;left:${o_state.o_trn.x}px;width:${o_state.o_scl.x}px;height:${o_state.o_scl.x}px`
+                }
+                return {
+                    id: s_id, 
+                    style: f_s_style(),
+                    class: "classic_window",
+                    a_o: [
+                        {
+                            
+                            class: "top_bar", 
+                            onmousedown: (o_e)=>{
+                                o_state.b_mousedown_top_bar = true
+                                o_state.o_trn_mousedown_top_bar = Victor(
+                                    o_e.clientX,
+                                    o_e.clientY,
+                                )
+
+                            },
+                            onmouseup: ()=>{o_state.b_mousedown_top_bar = false},
+                            onmouseout: ()=>{o_state.b_mousedown_top_bar = false},
+                            onmousemove: (o_e)=>{
+                                let o_trn_mouse =  Victor(
+                                    o_e.clientX,
+                                    o_e.clientY
+                                    )
+                                if(o_state.b_mousedown_top_bar){
+                                    let o_trn_diff = o_state.o_trn_mouse_mousemove_last.clone().subtract(
+                                        o_trn_mouse
+                                    )
+                                    o_state.o_trn = o_state.o_trn.clone().subtract(
+                                            o_trn_diff
+                                    );
+                                    document.querySelector(`#${s_id}`).style = f_s_style();
+
+                                }
+                                o_state.o_trn_mouse_mousemove_last = o_trn_mouse.clone()
+                            },
+                            a_o: [
+                                {
+                                    class: "bg_blue",
+                                    innerText: o_state.s_title
+                                }, 
+                                {
+                                    class: 'bg_blue',
+                                    style: "display:flex",
+                                    a_o:[
+                                        {
+                                            class: "minimize", 
+                                            a_o:[
+                                                {}
+                                            ],
+                                            onclick: function(){
+                                                o_state.b_display_content = !o_state.b_display_content
+                                                o_js?._f_render();
+                                            }
+                                        },
+                                        {
+                                            class: "maximize", 
+                                            a_o:[
+                                                {}
+                                            ]
+                                        }, 
+                                        {
+                                            class: "close", 
+                                            a_o:[
+                                                {}
+                                            ]
+                                        },
+                                    ]
+                                }
+    
+                            ]
+                        }, 
+                        {
+                            style: `display: ${(o_state.b_display_content) ? 'flex': 'none'}`,
+                            class: 'content', 
+                            a_o:[
+                                o_js__content, 
+                                {
+                                    class: "resizer", 
+                                    onmousedown: ()=>{o_state.b_mousedown_resizer = true},
+                                    onmouseup: ()=>{o_state.b_mousedown_resizer = false},
+                                    onmouseout: ()=>{o_state.b_mousedown_resizer = false},
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    return o_js;
+
+}
+
+
+o_o_state_o_js_s_css_roi = f_o_o_state_o_js_s_css(
+    o_state.o_state_o_js_roi,
+    {
+        f_o_js: function(){
+            return {
+                innerText: 'ROI - Region of Interest',
+                onclick: function(){
+                    o_state.o_state_o_js_roi.s_hey = Math.random().toString()
+                    o_state.o_state_o_js_roi.s_title = Math.random().toString()
+                    o_js__everything?._f_render()
+                }
+            }
+        }
+    }
+)
+
     o_js__inputs = {
         f_o_js: function(){
             return {
@@ -254,8 +395,6 @@ window.onresize = function(){
         o_state.o_ctx_2d.imageSmoothingEnabled = false;
     }
 
-
-
     o_js__notification = {
         f_o_js: function(){
             return {
@@ -276,11 +415,10 @@ window.onresize = function(){
     window.o_not = o_js__notification
     o_js__everything = {
         f_o_js: function(){
-
-
             return {
             
                 a_o: [
+                    o_o_state_o_js_s_css_roi,
                     {
                         class: "fullscreen", 
                         a_o: [
@@ -625,8 +763,53 @@ window.onresize = function(){
                 max-width: 100vw;
                 max-height: 100vh;
                 object-fit: contain;
-
             }
+
+            .classic_window{
+                box-shadow: 3px 3px 8px 2px black;
+            }
+            .minimize, .maximize {
+                margin: 0rem .2rem;
+                background:#1a1a1a !important;
+                width: 1.2rem;
+                height: 1.2rem;
+                border: 3px outset;
+                box-shadow: 1px 2px 0px 1px black;
+                position: relative;
+            }
+            .minimize:active, .maximize:active{
+                border:inset;
+            }
+
+            .minimize > div {
+                width: 50%;
+                height: 16%;
+                background: #9a9a9a;
+                position: absolute;
+                top: 75%;
+                left: 50%;
+                transform:translate(-50%, -50%)
+            }
+            .maximize > div {
+                height: 50%;
+                width: 50%;
+                border:2px solid #9a9a9a;
+                border-top:4px solid ;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform:translate(-50%, -50%)
+            }
+            .top_bar{
+                display:flex;
+                padding: 0.5rem;
+                justify-content: space-between;
+            }
+            .top_bar, .bg_blue{
+                background:blue;
+            }
+
+            
     `;
     // let s_css_prefixed = f_s_css_prefixed(
     //     s_css,
