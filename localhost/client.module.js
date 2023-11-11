@@ -10,8 +10,11 @@ import {
     f_o_canvas_nonmanipulated__from_o_file__fits, 
     f_o_canvas_autostretched__from_o_file__fits, 
     f_a_n_u8__from_s_url
-} from "https://deno.land/x/o_file__fits@0.6/mod.js";
+} from "https://deno.land/x/o_file__fits@0.8/mod.js";
 
+import {
+    f_measure_time
+} from "https://deno.land/x/date_functions/mod.js"
 
 let o_js__everything = null;
 let o_js__inputs = null;
@@ -56,6 +59,19 @@ class O_notification{
     }
 }
 
+window.f_o_vec = function(n){
+    let n_x = n;
+    let n_y = n;
+    // let n_z = n;
+    if(arguments.length > 1){
+        n_y = arguments[1]
+    }
+    // if(arguments.length >= 2){
+    //     n_z = arguments[2]
+    // }
+
+    return Victor(n_x, n_y)
+}
 
 window.o_state = {
     s_url: '', 
@@ -63,12 +79,9 @@ window.o_state = {
     n_id_timeout_s_url: 0,
     n_ms_timeout_s_url: 500, 
     o_file_fileselector: null,
-    n_trn_x__canvas: null,
-    n_trn_y__canvas: null,
-    n_trn_x__pixel_hovered: null,
-    n_trn_y__pixel_hovered: null,
-    n_trn_x__mouse_last: null,
-    n_trn_y__mouse_last: null,
+    o_trn__canvas: f_o_vec(0),
+    o_trn__pixel_hovered: f_o_vec(0),
+    o_trn__mouse_last: f_o_vec(),
     b_mousedown_canvas: false,
     n_pixelvalue: null, 
     o_file__fits: null, 
@@ -90,7 +103,9 @@ window.o_state = {
         s_hey: 'hey', 
         s_title: 'ROI - Region of Interest', 
 
-    }
+    }, 
+    o_trn_roi: f_o_vec(0),
+    o_scl_roi: f_o_vec(0.5, 0.5),
 };
 let f_update_o_notification_and_render = function(
     s_class,
@@ -135,8 +150,7 @@ let f_resize_canvas = function(){
         o_state.o_canvas.style.height = '100vh';
     }
     o_state.n_scl_canvas = 1
-    o_state.n_trn_x__canvas = 0
-    o_state.n_trn_y__canvas = 0
+    o_state.o_trn__canvas = f_o_vec(0)
     
 }
 window.onresize = function(){
@@ -152,14 +166,14 @@ let f_o_o_state_o_js_s_css = function(
     Object.assign(
         o_state, 
         {
-            o_trn: Victor(0,0),
-            o_scl: Victor(400, 400),
+            o_trn: f_o_vec(0,0),
+            o_scl: f_o_vec(400, 400),
             b_display_content: true,
             b_mousedown_resizer: false, 
             b_mousedown_top_bar: false, 
-            o_trn_mousedown_top_bar: Victor(),
-            o_trn_mousedown_resizer: Victor(),
-            o_trn_mouse_mousemove_last: Victor()
+            o_trn_mousedown_top_bar: f_o_vec(),
+            o_trn_mousedown_resizer: f_o_vec(),
+            o_trn_mouse_mousemove_last: f_o_vec()
         }
     );
     let n_ts = new Date().getTime();
@@ -168,7 +182,7 @@ let f_o_o_state_o_js_s_css = function(
     o_js = {
             f_o_js: function(){
                 let f_s_style = function(){
-                    return `cursor:move;position:fixed;top:${o_state.o_trn.y}px;left:${o_state.o_trn.x}px;width:${o_state.o_scl.x}px;height:${o_state.o_scl.x}px`
+                    return `display: none;cursor:move;position:fixed;top:${o_state.o_trn.y}px;left:${o_state.o_trn.x}px;width:${o_state.o_scl.x}px;height:${o_state.o_scl.x}px`
                 }
                 return {
                     id: s_id, 
@@ -180,7 +194,7 @@ let f_o_o_state_o_js_s_css = function(
                             class: "top_bar", 
                             onmousedown: (o_e)=>{
                                 o_state.b_mousedown_top_bar = true
-                                o_state.o_trn_mousedown_top_bar = Victor(
+                                o_state.o_trn_mousedown_top_bar = f_o_vec(
                                     o_e.clientX,
                                     o_e.clientY,
                                 )
@@ -189,7 +203,7 @@ let f_o_o_state_o_js_s_css = function(
                             onmouseup: ()=>{o_state.b_mousedown_top_bar = false},
                             onmouseout: ()=>{o_state.b_mousedown_top_bar = false},
                             onmousemove: (o_e)=>{
-                                let o_trn_mouse =  Victor(
+                                let o_trn_mouse =  f_o_vec(
                                     o_e.clientX,
                                     o_e.clientY
                                     )
@@ -314,7 +328,11 @@ o_o_state_o_js_s_css_roi = f_o_o_state_o_js_s_css(
                                         o_state.o_canvas.height = o_state.o_canvas__fits.height;
                                         o_state.o_ctx_2d.drawImage(o_state.o_canvas__fits, 0, 0);         
                                         f_update_o_notification_and_render('loading',"Performing autostretch...");
+
+                                        f_measure_time('autostrech')
+                                        console.log(o_state.o_file__fits)
                                         o_state.o_canvas__fits_autostretched  = await  f_o_canvas_autostretched__from_o_file__fits(o_state.o_file__fits);
+                                        f_measure_time('autostrech')
    
                                         f_update_o_notification_and_render('success',"Autostretch successfull!", 1000);
                                         o_state.o_canvas.width = o_state.o_canvas__fits_autostretched.width;
@@ -387,7 +405,7 @@ o_o_state_o_js_s_css_roi = f_o_o_state_o_js_s_css(
         o_state.o_ctx_2d.clearRect(0, 0, o_state.o_canvas.width, o_state.o_canvas.height);
         o_state.o_ctx_2d.save();
         // o_state.o_ctx_2d.translate(o_state.o_canvas.width/2, o_state.o_canvas.width/2);
-        o_state.o_ctx_2d.translate(o_state.n_trn_x__canvas, o_state.n_trn_y__canvas);
+        o_state.o_ctx_2d.translate(o_state.o_trn__canvas.x, o_state.o_trn__canvas.y);
         o_state.o_ctx_2d.scale(o_state.n_scl_canvas, o_state.n_scl_canvas);
 
         o_state.o_ctx_2d.drawImage(o_state.o_canvas__fits_autostretched, 0, 0);
@@ -418,13 +436,21 @@ o_o_state_o_js_s_css_roi = f_o_o_state_o_js_s_css(
             return {
             
                 a_o: [
-                    o_o_state_o_js_s_css_roi,
+                    // o_o_state_o_js_s_css_roi,
                     {
                         class: "fullscreen", 
                         a_o: [
                             {
-                                s_tag: "canvas",
-                                class: "background_image", 
+                                class: "canvas_container",
+                                a_o:[
+                                    {
+                                        s_tag: "canvas",
+                                    },
+                                    {
+
+                                        class: 'roi_div'
+                                    }
+                                ],
                             },
                         ]
                     },
@@ -452,11 +478,16 @@ o_o_state_o_js_s_css_roi = f_o_o_state_o_js_s_css(
     o_state.o_ctx_2d = o_state.o_canvas.getContext('2d');
     o_state.o_ctx_2d.imageSmoothingEnabled = false;
 
+
+
     o_state.o_canvas.onwheel = function (event) {
 
         const scaleFactor = getCSSScaleFactor(o_state.o_canvas);
-        const n_trn_x__mouse = (event.clientX - o_state.o_canvas.getBoundingClientRect().left)/scaleFactor;
-        const n_trn_y__mouse = (event.clientY - o_state.o_canvas.getBoundingClientRect().top)/scaleFactor;
+        let o_bounding_rect = o_state.o_canvas.getBoundingClientRect();
+        let o_trn_boundrect = f_o_vec(o_bounding_rect.left, o_bounding_rect.top);
+        let o_trn__mouse = f_o_vec(event.clientX, event.clientY)
+            .subtract(o_trn_boundrect)
+            .divide(f_o_vec(scaleFactor))
     
         // Normalize wheel delta across browsers
         let delta = event.deltaY ? (-event.deltaY / 3) : event.wheelDelta;
@@ -467,14 +498,15 @@ o_o_state_o_js_s_css_roi = f_o_o_state_o_js_s_css(
         // Calculate the new scale
         const n_scl_canvas_new = o_state.n_scl_canvas * n_zoom_factor;
 
-    
         // Adjust offsets to account for mouse position
-        const n_dx = (n_trn_x__mouse - o_state.n_trn_x__canvas) * (n_scl_canvas_new - o_state.n_scl_canvas) / o_state.n_scl_canvas;
-        const n_dy = (n_trn_y__mouse - o_state.n_trn_y__canvas) * (n_scl_canvas_new - o_state.n_scl_canvas) / o_state.n_scl_canvas;
-    
+        let o_trn__d = 
+            o_trn__mouse
+            .subtract(o_state.o_trn__canvas)
+            .multiply((f_o_vec(n_scl_canvas_new - o_state.n_scl_canvas)))
+            .divide(f_o_vec(o_state.n_scl_canvas))
+
         // Update offsets to keep the point under the mouse fixed
-        o_state.n_trn_x__canvas -= n_dx;
-        o_state.n_trn_y__canvas -= n_dy;
+        o_state.o_trn__canvas.subtract(o_trn__d);
 
         // Update scale
         o_state.n_scl_canvas = n_scl_canvas_new;
@@ -488,53 +520,44 @@ o_o_state_o_js_s_css_roi = f_o_o_state_o_js_s_css(
     o_state.o_canvas.onmousedown = function(event) {
         o_state.b_mousedown_canvas = true;
         let o_rect = o_state.o_canvas.getBoundingClientRect();
-        const n_trn_x__mouse = (event.clientX - o_rect.left);
-        const n_trn_y__mouse = (event.clientY - o_rect.top);
 
-        o_state.n_trn_x__mouse_last= n_trn_x__mouse
-        o_state.n_trn_y__mouse_last= n_trn_y__mouse
-        o_state.n_trn_x__canvas_start= o_state.n_trn_x__canvas
-        o_state.n_trn_y__canvas_start= o_state.n_trn_y__canvas
+        o_state.o_trn__mouse_last = f_o_vec(
+            (event.clientX - o_rect.left),
+            (event.clientY - o_rect.top)
+        )
+        o_state.o_trn__canvas_start = o_state.o_trn__canvas.clone()
 
-
-        
     };
     
     o_state.o_canvas.onmousemove = function(event) {
         if(o_state.b_mousedown_canvas){
 
             let o_rect = o_state.o_canvas.getBoundingClientRect();
-            const n_trn_x__mouse = (event.clientX - o_rect.left);
-            const n_trn_y__mouse = (event.clientY - o_rect.top);
-    
-            const dxInViewportSpace = n_trn_x__mouse - o_state.n_trn_x__mouse_last;
-            const dyInViewportSpace = n_trn_y__mouse - o_state.n_trn_y__mouse_last;
+            let o_trn__mouse = f_o_vec(
+                (event.clientX - o_rect.left),
+                (event.clientY - o_rect.top)    
+            )
+            let o_scl__viewportspace = o_trn__mouse.subtract(o_state.o_trn__mouse_last)
 
-            const dxInCanvasSpace = dxInViewportSpace * (o_state.o_canvas.width / o_rect.width);
-            const dyInCanvasSpace = dyInViewportSpace * (o_state.o_canvas.height / o_rect.height);
-    
-            o_state.n_trn_x__canvas = o_state.n_trn_x__canvas_start + dxInCanvasSpace;
-            o_state.n_trn_y__canvas = o_state.n_trn_y__canvas_start + dyInCanvasSpace;
+            let o_scl__canvas_space = o_scl__viewportspace.multiply(
+                f_o_vec(
+                    (o_state.o_canvas.width / o_rect.width),
+                    (o_state.o_canvas.height / o_rect.height)
+                )
+            )
             
-            // // Calculate the difference in position directly
-            // const intrinsicScaleFactor = o_state.o_canvas.width / o_rect.width;
-            // const dx = (n_trn_x__mouse - o_state.n_trn_x__mouse_last) * intrinsicScaleFactor;
-            // const dy = (n_trn_y__mouse - o_state.n_trn_y__mouse_last) * intrinsicScaleFactor;
-    
-            // // Adjust the offsets directly with dx and dy
-            // o_state.n_trn_x__canvas = o_state.n_trn_x__mouse_last + dx;
-            // o_state.n_trn_y__canvas = o_state.n_trn_y__mouse_last + dy;
-    
-            // // // Set the last position to the current position
-            // o_state.n_trn_x__mouse_last = n_trn_x__mouse;
-            // o_state.n_trn_y__mouse_last = n_trn_y__mouse;
+            o_state.o_trn__canvas = o_state.o_trn__canvas_start.clone().add(
+                o_scl__canvas_space
+            )
+            
+
         }
+        o_state.o_trn__pixel_hovered = f_o_vec(
+            parseInt((event.clientX - o_state.o_canvas.getBoundingClientRect().left - o_state.o_trn__canvas.x) / o_state.n_scl_canvas),
+            parseInt((event.clientY - o_state.o_canvas.getBoundingClientRect().top - o_state.o_trn__canvas.y) / o_state.n_scl_canvas)   
+        )
 
-        // Calculate the canvas coordinates
-        o_state.n_trn_x__pixel_hovered = parseInt((event.clientX - o_state.o_canvas.getBoundingClientRect().left - o_state.n_trn_x__canvas) / o_state.n_scl_canvas);
-        o_state.n_trn_y__pixel_hovered = parseInt((event.clientY - o_state.o_canvas.getBoundingClientRect().top - o_state.n_trn_y__canvas) / o_state.n_scl_canvas);
-
-        console.log("Canvas coordinates:", o_state.n_trn_x__pixel_hovered, o_state.n_trn_y__pixel_hovered);
+        console.log("Canvas coordinates:", o_state.o_trn__pixel_hovered);
 
         f_render_canvas();
 
@@ -807,6 +830,18 @@ o_o_state_o_js_s_css_roi = f_o_o_state_o_js_s_css(
             }
             .top_bar, .bg_blue{
                 background:blue;
+            }
+            .canvas_container{
+                position:relative;
+            }
+            .div {
+                width: 20vw;
+                height: 20vw;
+                position: absolute;
+                left: 0;
+                top: 50%;
+                border: 1px solid #ff0000;
+                z-index: 14;
             }
 
             
